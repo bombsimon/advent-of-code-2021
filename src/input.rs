@@ -9,6 +9,7 @@ pub fn file_for_day(day: i32) -> Vec<String> {
     r.lines().filter_map(|l| l.ok()).collect()
 }
 
+#[cfg(test)]
 pub fn test_vec(s: &str) -> Vec<String> {
     s.lines()
         .filter(|l| !l.is_empty())
