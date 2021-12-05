@@ -7,73 +7,14 @@ pub fn solve() {
     println!("Solution part 2: {}", part_two(x));
 }
 
-fn str_to_tuple(s: &str) -> (i32, i32) {
-    let mut numbers = s.split(",");
-    let x = numbers.next().unwrap().parse::<i32>().unwrap();
-    let y = numbers.next().unwrap().parse::<i32>().unwrap();
-
-    (x, y)
-}
-
 fn part_one(input: Vec<String>) -> i32 {
-    let x = input
-        .iter()
-        .map(|l| {
-            let mut sides = l.split(" -> ");
-            let left = sides.next().unwrap();
-            let right = sides.next().unwrap();
-
-            (str_to_tuple(left), str_to_tuple(right))
-        })
-        .filter(|((x1, y1), (x2, y2))| x1 == x2 || y1 == y2)
-        .collect::<Vec<_>>();
-
-    let mut coordinates: std::collections::HashMap<(i32, i32), i32> =
-        std::collections::HashMap::new();
-
-    x.iter().for_each(|((x1, y1), (x2, y2))| {
-        let [start, stop] = if x1 == x2 { [*y1, *y2] } else { [*x1, *x2] };
-
-        let range = if start > stop {
-            (stop..=start).rev().collect::<Vec<_>>()
-        } else {
-            (start..=stop).collect::<Vec<_>>()
-        };
-
-        for v in range {
-            let c = if x1 == x2 { (*x1, v) } else { (v, *y1) };
-
-            let current_seen = coordinates.entry(c).or_default();
-            *current_seen += 1;
-        }
-    });
-
-    coordinates.iter().filter(|(_, &v)| v > 1).count() as i32
-}
-
-fn make_range(start: i32, stop: i32, other_start: i32, other_stop: i32) -> Vec<i32> {
-    if start == stop {
-        let diff = ((other_start - other_stop).abs() + 1) as usize;
-        vec![start; diff]
-    } else if start > stop {
-        (stop..=start).rev().collect::<Vec<_>>()
-    } else {
-        (start..=stop).collect::<Vec<_>>()
-    }
-}
-fn part_two(input: Vec<String>) -> i32 {
     let mut coordinates: std::collections::HashMap<(i32, i32), i32> =
         std::collections::HashMap::new();
 
     input
         .iter()
-        .map(|l| {
-            let mut sides = l.split(" -> ");
-            let left = sides.next().unwrap();
-            let right = sides.next().unwrap();
-
-            (str_to_tuple(left), str_to_tuple(right))
-        })
+        .map(|l| line_to_coordinates(l))
+        .filter(|((x1, y1), (x2, y2))| x1 == x2 || y1 == y2)
         .for_each(|((x1, y1), (x2, y2))| {
             let x_range = make_range(x1, x2, y1, y2);
             let y_range = make_range(y1, y2, x1, x2);
@@ -86,6 +27,54 @@ fn part_two(input: Vec<String>) -> i32 {
         });
 
     coordinates.iter().filter(|(_, &v)| v > 1).count() as i32
+}
+
+fn part_two(input: Vec<String>) -> i32 {
+    let mut coordinates: std::collections::HashMap<(i32, i32), i32> =
+        std::collections::HashMap::new();
+
+    input
+        .iter()
+        .map(|l| line_to_coordinates(l))
+        .for_each(|((x1, y1), (x2, y2))| {
+            let x_range = make_range(x1, x2, y1, y2);
+            let y_range = make_range(y1, y2, x1, x2);
+
+            x_range.iter().zip(&y_range).for_each(|(x, y)| {
+                let c = (*x, *y);
+                let current_seen = coordinates.entry(c).or_default();
+                *current_seen += 1;
+            });
+        });
+
+    coordinates.iter().filter(|(_, &v)| v > 1).count() as i32
+}
+
+fn line_to_coordinates(l: &str) -> ((i32, i32), (i32, i32)) {
+    let mut sides = l.split(" -> ");
+    let left = sides.next().unwrap();
+    let right = sides.next().unwrap();
+
+    (str_to_tuple(left), str_to_tuple(right))
+}
+
+fn str_to_tuple(s: &str) -> (i32, i32) {
+    let mut numbers = s.split(",");
+    let x = numbers.next().unwrap().parse::<i32>().unwrap();
+    let y = numbers.next().unwrap().parse::<i32>().unwrap();
+
+    (x, y)
+}
+
+fn make_range(start: i32, stop: i32, other_start: i32, other_stop: i32) -> Vec<i32> {
+    if start == stop {
+        let diff = ((other_start - other_stop).abs() + 1) as usize;
+        vec![start; diff]
+    } else if start > stop {
+        (stop..=start).rev().collect::<Vec<_>>()
+    } else {
+        (start..=stop).collect::<Vec<_>>()
+    }
 }
 
 #[cfg(test)]
