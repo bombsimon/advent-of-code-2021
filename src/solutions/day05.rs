@@ -32,13 +32,7 @@ fn part_one(input: Vec<String>) -> i32 {
         std::collections::HashMap::new();
 
     x.iter().for_each(|((x1, y1), (x2, y2))| {
-        // Y is chaning, X is static.
-        let [start, stop] = if x1 == x2 {
-            [*y1, *y2]
-        // X is chaning, Y is static.
-        } else {
-            [*x1, *x2]
-        };
+        let [start, stop] = if x1 == x2 { [*y1, *y2] } else { [*x1, *x2] };
 
         let range = if start > stop {
             (stop..=start).rev().collect::<Vec<_>>()
@@ -57,8 +51,41 @@ fn part_one(input: Vec<String>) -> i32 {
     coordinates.iter().filter(|(_, &v)| v > 1).count() as i32
 }
 
-fn part_two(_input: Vec<String>) -> i32 {
-    1
+fn make_range(start: i32, stop: i32, other_start: i32, other_stop: i32) -> Vec<i32> {
+    if start == stop {
+        let diff = ((other_start - other_stop).abs() + 1) as usize;
+        vec![start; diff]
+    } else if start > stop {
+        (stop..=start).rev().collect::<Vec<_>>()
+    } else {
+        (start..=stop).collect::<Vec<_>>()
+    }
+}
+fn part_two(input: Vec<String>) -> i32 {
+    let mut coordinates: std::collections::HashMap<(i32, i32), i32> =
+        std::collections::HashMap::new();
+
+    input
+        .iter()
+        .map(|l| {
+            let mut sides = l.split(" -> ");
+            let left = sides.next().unwrap();
+            let right = sides.next().unwrap();
+
+            (str_to_tuple(left), str_to_tuple(right))
+        })
+        .for_each(|((x1, y1), (x2, y2))| {
+            let x_range = make_range(x1, x2, y1, y2);
+            let y_range = make_range(y1, y2, x1, x2);
+
+            x_range.iter().zip(&y_range).for_each(|(x, y)| {
+                let c = (*x, *y);
+                let current_seen = coordinates.entry(c).or_default();
+                *current_seen += 1;
+            });
+        });
+
+    coordinates.iter().filter(|(_, &v)| v > 1).count() as i32
 }
 
 #[cfg(test)]
