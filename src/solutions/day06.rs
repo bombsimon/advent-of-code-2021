@@ -31,8 +31,40 @@ fn part_one(input: String) -> i64 {
     fish.len() as i64
 }
 
-fn part_two(_input: String) -> i64 {
-    1
+fn part_two(input: String) -> i64 {
+    let mut fish_by_age: std::collections::HashMap<i8, i64> = std::collections::HashMap::new();
+
+    input
+        .split(",")
+        .map(|x| x.parse::<i8>().unwrap())
+        .for_each(|x| {
+            let count = fish_by_age.entry(x).or_default();
+            *count += 1;
+        });
+
+    for _ in 0..256 {
+        let mut daily_fishes: std::collections::HashMap<i8, i64> = std::collections::HashMap::new();
+
+        for age in 0..=8 {
+            let &mut count = fish_by_age.entry(age).or_default();
+
+            let new_age = if age == 0 {
+                let fish_of_age_eight = daily_fishes.entry(8).or_default();
+                *fish_of_age_eight += count;
+
+                6
+            } else {
+                age - 1
+            };
+
+            let fish_of_new_age = daily_fishes.entry(new_age).or_default();
+            *fish_of_new_age += count;
+        }
+
+        fish_by_age = daily_fishes;
+    }
+
+    fish_by_age.iter().fold(0, |acc, (_, &count)| acc + count)
 }
 
 #[cfg(test)]
@@ -40,7 +72,7 @@ mod tests {
     use crate::input;
 
     static SOLUTION_ONE: i64 = 5934;
-    static SOLUTION_TWO: i64 = 1;
+    static SOLUTION_TWO: i64 = 26984457539;
     static TEST_INPUT: &str = r#"
 3,4,3,1,2
 "#;
