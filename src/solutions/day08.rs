@@ -1,3 +1,5 @@
+use itertools::Itertools;
+
 use crate::input;
 
 pub fn solve() {
@@ -27,36 +29,124 @@ fn part_one(input: Vec<String>) -> i64 {
         .fold(0, |acc, v| acc + v as i64)
 }
 
-fn part_two(_input: Vec<String>) -> i64 {
-    1
+fn part_two(input: Vec<String>) -> i64 {
+    // lines is a list of tuples containing the left and right side of the pipe where both sides in
+    // turn is a vector of chars.
+    let lines = &input
+        .iter()
+        .map(|x| {
+            let mut sides = x.split(" | ");
+            (sides.next().unwrap(), sides.next().unwrap())
+        })
+        .map(|(l, r)| {
+            (
+                l.split_whitespace()
+                    .map(|x| x.chars().collect::<Vec<_>>())
+                    .collect::<Vec<_>>(),
+                r.split_whitespace()
+                    .map(|x| x.chars().collect::<Vec<_>>())
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<Vec<_>>();
+
+    // The valid chars that can exist in groups to create digits.
+    let chars = vec!["a", "b", "c", "d", "e", "f", "g"];
+    let mut valid_combinations: std::collections::HashMap<i32, Vec<usize>> =
+        std::collections::HashMap::new();
+
+    // The indexes in the grid counting top -> down, left -> right for each digit.
+    valid_combinations.insert(0, vec![0, 1, 2, 4, 5, 6]);
+    valid_combinations.insert(1, vec![2, 5]);
+    valid_combinations.insert(2, vec![0, 2, 3, 4, 6]);
+    valid_combinations.insert(3, vec![0, 2, 3, 5, 6]);
+    valid_combinations.insert(4, vec![1, 2, 3, 5]);
+    valid_combinations.insert(5, vec![0, 1, 3, 5, 6]);
+    valid_combinations.insert(6, vec![0, 1, 3, 4, 5, 6]);
+    valid_combinations.insert(7, vec![0, 2, 5]);
+    valid_combinations.insert(8, vec![0, 1, 2, 3, 4, 5, 6]);
+    valid_combinations.insert(9, vec![0, 1, 2, 3, 5, 6]);
+
+    // numbers is the vector with each number from each group on the right side of the pipe.
+    let mut numbers: Vec<i64> = vec![];
+
+    for x in lines {
+        let mut valid_permutatin: Vec<&&str> = vec![];
+        // Check each permutation that our letters may be in and brute force or way by checking
+        // that all groups represent valid digits. This is slow and will take around 10 seconds for
+        // the full input.
+        'perm: for perm in chars.iter().permutations(chars.len()).unique() {
+            'group: for group in &x.0 {
+                // Given this permutation, give us the indexes that would be lit up for this group.
+                let mut idxs: Vec<usize> = vec![];
+                indexes_for_group_in_permutation(&mut idxs, &perm, group);
+
+                // See if the current group is a valid digit with the current permutation.
+                for (_, v) in &valid_combinations {
+                    if idxs == *v {
+                        // This group is valid, check next
+                        continue 'group;
+                    }
+                }
+
+                // This group is not valid with current permutation meaning it's not the right one.
+                // Try another one.
+                continue 'perm;
+            }
+
+            // We found the valid permutation, all groups are valid digit with this one. Just store
+            // it and break out of the loop.
+            valid_permutatin = perm;
+            break;
+        }
+
+        // digits is the vector for all digits extracted frin the groups on the right side.
+        let mut digits: Vec<i32> = vec![];
+
+        'digit: for x in &x.1 {
+            // Get the vector with all indexes for this digit.
+            let mut idxs: Vec<usize> = vec![];
+            indexes_for_group_in_permutation(&mut idxs, &valid_permutatin, x);
+
+            // Loop over our valid combinations to figure out which digit is represented by this
+            // index vector.
+            for (&n, v) in &valid_combinations {
+                if idxs == *v {
+                    digits.push(n);
+
+                    continue 'digit;
+                }
+            }
+        }
+
+        // Now just join our digits to a number and add it to our list of nubmers to sum.
+        let number = digits.iter().join("").parse::<i64>().unwrap();
+        numbers.push(number);
+    }
+
+    numbers.iter().sum()
 }
 
-/*
-  0:      1:      2:      3:      4:
- aaaa    ....    aaaa    aaaa    ....
-b    c  .    c  .    c  .    c  b    c
-b    c  .    c  .    c  .    c  b    c
- ....    ....    dddd    dddd    dddd
-e    f  .    f  e    .  .    f  .    f
-e    f  .    f  e    .  .    f  .    f
- gggg    ....    gggg    gggg    ....
+fn indexes_for_group_in_permutation(idxs: &mut Vec<usize>, perm: &Vec<&&str>, group: &Vec<char>) {
+    for c in group {
+        let idx = perm
+            .iter()
+            .position(|&&x| x == c.to_string().as_str())
+            .unwrap();
 
-  5:      6:      7:      8:      9:
- aaaa    aaaa    aaaa    aaaa    aaaa
-b    .  b    .  .    c  b    c  b    c
-b    .  b    .  .    c  b    c  b    c
- dddd    dddd    ....    dddd    dddd
-.    f  e    f  .    f  e    f  .    f
-.    f  e    f  .    f  e    f  .    f
- gggg    gggg    ....    gggg    gggg
-*/
+        idxs.push(idx);
+    }
+
+    // Sort our list so it matches the expected output.
+    idxs.sort();
+}
 
 #[cfg(test)]
 mod tests {
     use crate::input;
 
     static SOLUTION_ONE: i64 = 26;
-    static SOLUTION_TWO: i64 = 1;
+    static SOLUTION_TWO: i64 = 61229;
     static TEST_INPUT: &str = r#"
 be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
 edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
