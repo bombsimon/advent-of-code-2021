@@ -14,24 +14,20 @@ fn part_one(input: Vec<String>) -> i64 {
 
     input
         .iter()
-        .map(|l| l.chars().collect::<Vec<_>>())
+        .map(|l| l.chars())
         .map(|row| {
             for c in row {
                 match c {
-                    '<' | '[' | '{' | '(' => {
-                        brackets.push(c);
-                    }
+                    '<' | '[' | '{' | '(' => brackets.push(c),
                     '>' | ']' | '}' | ')' => {
-                        let last_bracket = brackets[brackets.len() - 1];
+                        let last_bracket = brackets.pop().unwrap();
                         let must_match = *bracket_map.get(&c).unwrap();
 
                         if last_bracket != must_match {
                             return *point_map.get(&c).unwrap();
-                        } else {
-                            brackets.remove(brackets.len() - 1);
                         }
                     }
-                    _ => unreachable!("{}", c),
+                    _ => unreachable!(),
                 }
             }
 
@@ -51,20 +47,17 @@ fn part_two(input: Vec<String>) -> i64 {
     input
         .iter()
         .map(|l| l.chars().collect::<Vec<_>>())
+        // Filter out invalid ones by checking any missmatching groups.
         .filter(|row| {
             for c in row {
                 match c {
-                    '<' | '[' | '{' | '(' => {
-                        filter_brackets.push(*c);
-                    }
+                    '<' | '[' | '{' | '(' => filter_brackets.push(*c),
                     '>' | ']' | '}' | ')' => {
-                        let last_bracket = filter_brackets[filter_brackets.len() - 1];
+                        let last_bracket = filter_brackets.pop().unwrap();
                         let must_match = bracket_map.get(&c).unwrap();
 
                         if last_bracket != *must_match {
                             return false;
-                        } else {
-                            filter_brackets.remove(filter_brackets.len() - 1);
                         }
                     }
                     _ => unreachable!("{}", c),
@@ -73,32 +66,24 @@ fn part_two(input: Vec<String>) -> i64 {
 
             true
         })
+        // And for each incomplete, add the missing brackets and calculate the score.
         .for_each(|row| {
             for c in row {
                 match c {
-                    '<' | '[' | '{' | '(' => {
-                        missing_brackets.push(c);
-                    }
+                    '<' | '[' | '{' | '(' => missing_brackets.push(*bracket_map.get(&c).unwrap()),
                     '>' | ']' | '}' | ')' => {
-                        missing_brackets.remove(missing_brackets.len() - 1);
+                        missing_brackets.pop();
                     }
                     _ => unreachable!("{}", c),
                 }
             }
 
-            let mut matching_missing_brackets: Vec<char> = vec![];
-            for c in missing_brackets.iter().rev() {
-                let matching = bracket_map.get(c).unwrap();
-                matching_missing_brackets.push(*matching);
-            }
-
-            let mut score: i64 = 0;
-            for c in matching_missing_brackets {
-                let bracket_worth = point_map.get(&c).unwrap();
-                score = score * 5 + bracket_worth;
-            }
-
-            scores.push(score);
+            scores.push(
+                missing_brackets
+                    .iter()
+                    .rev()
+                    .fold(0, |acc, c| acc * 5 + point_map.get(&c).unwrap()),
+            );
 
             missing_brackets = vec![];
         });
