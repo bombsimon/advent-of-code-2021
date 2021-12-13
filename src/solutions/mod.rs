@@ -10,6 +10,7 @@ mod day09;
 mod day10;
 mod day11;
 mod day12;
+mod day13;
 
 pub fn solution_for(day: i32) {
     println!("Showing solution for day {}\n", day);
@@ -27,6 +28,7 @@ pub fn solution_for(day: i32) {
         10 => day10::solve(),
         11 => day11::solve(),
         12 => day12::solve(),
+        13 => day13::solve(),
         d => panic!("Day {} not implemented", d),
     }
 }
