@@ -25,13 +25,35 @@ fn part_one(input: Vec<String>) -> i64 {
     let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
     seen.insert("start");
 
-    traverse(&nodes, &mut seen, "start")
+    traverse(&nodes, &mut seen, "start", true)
+}
+
+fn part_two(input: Vec<String>) -> i64 {
+    let mut nodes: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
+
+    input.iter().for_each(|l| {
+        let mut parts = l.split("-");
+        let lhs = parts.next().unwrap();
+        let rhs = parts.next().unwrap();
+
+        let l = nodes.entry(lhs).or_default();
+        l.push(rhs);
+
+        let r = nodes.entry(rhs).or_default();
+        r.push(lhs);
+    });
+
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    seen.insert("start");
+
+    traverse(&nodes, &mut seen, "start", false)
 }
 
 fn traverse<'a>(
     nodes: &std::collections::HashMap<&str, Vec<&'a str>>,
     seen: &'a mut std::collections::HashSet<&'a str>,
     node: &'a str,
+    has_visit_twice: bool,
 ) -> i64 {
     if node == "end" {
         return 1;
@@ -43,13 +65,19 @@ fn traverse<'a>(
 
     let neighbors = nodes.get(node).unwrap();
     let mut sum = 0i64;
+
     for &n in neighbors {
+        let mut has_visisted = has_visit_twice;
         if seen.contains(n) {
-            continue;
+            if has_visisted || n == "start" {
+                continue;
+            }
+
+            has_visisted = true;
         }
 
         let mut seen_this_far = seen.clone();
-        sum += traverse(nodes, &mut seen_this_far, n);
+        sum += traverse(nodes, &mut seen_this_far, n, has_visisted);
     }
 
     sum
@@ -59,17 +87,13 @@ fn is_uppercase(s: &str) -> bool {
     s.chars().all(|c| c.is_ascii_uppercase())
 }
 
-fn part_two(_input: Vec<String>) -> i64 {
-    1
-}
-
 #[cfg(test)]
 mod tests {
     use crate::input;
 
     static SOLUTION_ONE: i64 = 10;
-    static SOLUTION_TWO: i64 = 1;
-    static TEST_INPUT_SMALL: &str = r#"
+    static SOLUTION_TWO: i64 = 36;
+    static TEST_INPUT: &str = r#"
 start-A
 start-b
 A-c
@@ -78,28 +102,16 @@ b-d
 A-end
 b-end
 "#;
-    static _TEST_INPUT: &str = r#"
-dc-end
-HN-start
-start-kj
-dc-start
-dc-HN
-LN-dc
-HN-end
-kj-sa
-kj-HN
-kj-dc
-"#;
 
     #[test]
     fn part_one() {
-        let x = input::test_vec(TEST_INPUT_SMALL);
+        let x = input::test_vec(TEST_INPUT);
         assert_eq!(super::part_one(x), SOLUTION_ONE);
     }
 
     #[test]
     fn part_two() {
-        let x = input::test_vec(TEST_INPUT_SMALL);
+        let x = input::test_vec(TEST_INPUT);
         assert_eq!(super::part_two(x), SOLUTION_TWO);
     }
 }
