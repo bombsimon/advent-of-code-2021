@@ -16,12 +16,12 @@ fn part_two(input: String) -> i64 {
 }
 
 fn count_after_insertion(input: String, iterations: usize) -> i64 {
-    let mut parts = input.split("\n\n");
-    let polymer_template = parts.next().unwrap();
-    let par_insertion = parts.next().unwrap();
+    let data = input.lines().collect::<Vec<_>>();
+    let polymer_template = &data[0];
+    let par_insertion = &data[2..];
 
     let mut par_map: std::collections::HashMap<&str, char> = std::collections::HashMap::new();
-    par_insertion.lines().for_each(|l| {
+    par_insertion.iter().for_each(|l| {
         let mut parts = l.split(" -> ");
         let ins = parts.next().unwrap();
         let val = parts.next().unwrap();
