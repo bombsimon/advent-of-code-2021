@@ -7,8 +7,56 @@ pub fn solve() {
     println!("Solution part 2: {}", part_two(x));
 }
 
-fn part_one(_input: Vec<String>) -> i64 {
-    1
+fn part_one(input: Vec<String>) -> i64 {
+    let mut nodes: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
+
+    input.iter().for_each(|l| {
+        let mut parts = l.split("-");
+        let lhs = parts.next().unwrap();
+        let rhs = parts.next().unwrap();
+
+        let l = nodes.entry(lhs).or_default();
+        l.push(rhs);
+
+        let r = nodes.entry(rhs).or_default();
+        r.push(lhs);
+    });
+
+    let mut seen: std::collections::HashSet<&str> = std::collections::HashSet::new();
+    seen.insert("start");
+
+    traverse(&nodes, &mut seen, "start")
+}
+
+fn traverse<'a>(
+    nodes: &std::collections::HashMap<&str, Vec<&'a str>>,
+    seen: &'a mut std::collections::HashSet<&'a str>,
+    node: &'a str,
+) -> i64 {
+    if node == "end" {
+        return 1;
+    }
+
+    if !is_uppercase(node) {
+        seen.insert(node);
+    }
+
+    let neighbors = nodes.get(node).unwrap();
+    let mut sum = 0i64;
+    for &n in neighbors {
+        if seen.contains(n) {
+            continue;
+        }
+
+        let mut seen_this_far = seen.clone();
+        sum += traverse(nodes, &mut seen_this_far, n);
+    }
+
+    sum
+}
+
+fn is_uppercase(s: &str) -> bool {
+    s.chars().all(|c| c.is_ascii_uppercase())
 }
 
 fn part_two(_input: Vec<String>) -> i64 {
