@@ -1,5 +1,8 @@
 use crate::input;
 
+const TEXT: &'static str = "█";
+const BACKGROUND: &'static str = "░";
+
 pub fn solve() {
     let x = input::raw_file_for_day(13);
 
@@ -12,16 +15,24 @@ fn part_one(input: String) -> i64 {
     let coordiantes = parts.next().unwrap();
     let folds = parts.next().unwrap();
 
-    let mut grid: Vec<Vec<&str>> = vec![vec![" "; 1311]; 893]; // Cheated, fetched higest value from input...
-
-    //let mut grid: Vec<Vec<&str>> = vec![vec!["."; 11]; 15]; // For test
+    let mut grid: Vec<Vec<&str>> = vec![vec![BACKGROUND; 0]; 0];
 
     coordiantes.lines().for_each(|l| {
         let mut c = l.split(",");
         let col = c.next().unwrap().parse::<usize>().unwrap();
         let row = c.next().unwrap().parse::<usize>().unwrap();
 
-        grid[row][col] = "█";
+        for _ in grid.len()..=row {
+            grid.push(vec![]);
+        }
+
+        for r in grid.iter_mut() {
+            for _ in r.len()..=col {
+                r.push(BACKGROUND);
+            }
+        }
+
+        grid[row][col] = TEXT;
     });
 
     let mut fold_list: Vec<(String, usize)> = vec![];
@@ -37,7 +48,7 @@ fn part_one(input: String) -> i64 {
     flip(&mut grid, *fold_at, axis);
 
     grid.iter().fold(0, |acc, row| {
-        acc + row.iter().filter(|&v| *v == "█").count() as i64
+        acc + row.iter().filter(|&v| *v == TEXT).count() as i64
     })
 }
 
@@ -46,14 +57,24 @@ fn part_two(input: String) -> i64 {
     let coordiantes = parts.next().unwrap();
     let folds = parts.next().unwrap();
 
-    let mut grid: Vec<Vec<&str>> = vec![vec![" "; 1311]; 893]; // Cheated, fetched higest value from input...
+    let mut grid: Vec<Vec<&str>> = vec![vec![BACKGROUND; 0]; 0];
 
     coordiantes.lines().for_each(|l| {
         let mut c = l.split(",");
         let col = c.next().unwrap().parse::<usize>().unwrap();
         let row = c.next().unwrap().parse::<usize>().unwrap();
 
-        grid[row][col] = "█";
+        for _ in grid.len()..=row {
+            grid.push(vec![]);
+        }
+
+        for r in grid.iter_mut() {
+            for _ in r.len()..=col {
+                r.push(BACKGROUND);
+            }
+        }
+
+        grid[row][col] = TEXT;
     });
 
     let mut fold_list: Vec<(String, usize)> = vec![];
@@ -111,8 +132,8 @@ fn flip(grid: &mut Vec<Vec<&'static str>>, fold_at: usize, axis: &str) {
                 [i, j + delta]
             };
 
-            grid[grid_i][grid_j] = if grid[grid_i][grid_j] == "█" {
-                "█"
+            grid[grid_i][grid_j] = if grid[grid_i][grid_j] == TEXT {
+                TEXT
             } else {
                 flipped_value
             };
