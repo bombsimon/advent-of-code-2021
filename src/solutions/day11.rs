@@ -97,7 +97,7 @@ fn print_grid(x: &mut Vec<Vec<u32>>) {
         for j in i {
             print!("{:<3}", if *j > 9 { *j } else { *j });
         }
-        println!("");
+        println!();
     }
 
     println!("---");
@@ -122,7 +122,7 @@ fn flash(x: &mut Vec<Vec<u32>>) -> Vec<(usize, usize)> {
 }
 
 fn increase_flashing_neigbors(x: &mut Vec<Vec<u32>>, flashed: &[(usize, usize)]) -> i64 {
-    if flashed.len() == 0 {
+    if flashed.is_empty() {
         return 0;
     }
 

@@ -96,7 +96,7 @@ fn part_two(input: Vec<String>) -> i64 {
         sum.push(h.len() as i64);
     }
 
-    sum.sort();
+    sum.sort_unstable();
 
     sum.iter()
         .rev()

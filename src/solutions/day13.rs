@@ -1,7 +1,7 @@
 use crate::input;
 
-const TEXT: &'static str = "█";
-const BACKGROUND: &'static str = "░";
+const TEXT: &str = "█";
+const BACKGROUND: &str = "░";
 
 pub fn solve() {
     let x = input::raw_file_for_day(13);
@@ -18,7 +18,7 @@ fn part_one(input: String) -> i64 {
     let mut grid: Vec<Vec<&str>> = vec![vec![BACKGROUND; 0]; 0];
 
     coordiantes.lines().for_each(|l| {
-        let mut c = l.split(",");
+        let mut c = l.split(',');
         let col = c.next().unwrap().parse::<usize>().unwrap();
         let row = c.next().unwrap().parse::<usize>().unwrap();
 
@@ -37,11 +37,11 @@ fn part_one(input: String) -> i64 {
 
     let mut fold_list: Vec<(String, usize)> = vec![];
     folds.lines().for_each(|l| {
-        let mut c = l.split("=");
+        let mut c = l.split('=');
         let axis = c.next().unwrap().replace("fold along ", "");
         let val = c.next().unwrap().parse::<usize>().unwrap();
 
-        fold_list.push((axis.clone(), val));
+        fold_list.push((axis, val));
     });
 
     let (axis, fold_at) = &fold_list[0];
@@ -60,7 +60,7 @@ fn part_two(input: String) -> i64 {
     let mut grid: Vec<Vec<&str>> = vec![vec![BACKGROUND; 0]; 0];
 
     coordiantes.lines().for_each(|l| {
-        let mut c = l.split(",");
+        let mut c = l.split(',');
         let col = c.next().unwrap().parse::<usize>().unwrap();
         let row = c.next().unwrap().parse::<usize>().unwrap();
 
@@ -79,11 +79,11 @@ fn part_two(input: String) -> i64 {
 
     let mut fold_list: Vec<(String, usize)> = vec![];
     folds.lines().for_each(|l| {
-        let mut c = l.split("=");
+        let mut c = l.split('=');
         let axis = c.next().unwrap().replace("fold along ", "");
         let val = c.next().unwrap().parse::<usize>().unwrap();
 
-        fold_list.push((axis.clone(), val));
+        fold_list.push((axis, val));
     });
 
     for (axis, fold_at) in fold_list {

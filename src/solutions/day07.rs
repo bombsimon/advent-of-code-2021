@@ -10,7 +10,7 @@ pub fn solve() {
 fn part_one(input: String) -> i64 {
     let x = input
         .trim_end()
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i64>().unwrap())
         .collect::<Vec<_>>();
 
@@ -31,7 +31,7 @@ fn part_one(input: String) -> i64 {
 fn part_two(input: String) -> i64 {
     let x = input
         .trim_end()
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i64>().unwrap())
         .collect::<Vec<_>>();
 

@@ -11,7 +11,7 @@ fn part_one(input: Vec<String>) -> i64 {
     let mut nodes: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
 
     input.iter().for_each(|l| {
-        let mut parts = l.split("-");
+        let mut parts = l.split('-');
         let lhs = parts.next().unwrap();
         let rhs = parts.next().unwrap();
 
@@ -32,7 +32,7 @@ fn part_two(input: Vec<String>) -> i64 {
     let mut nodes: std::collections::HashMap<&str, Vec<&str>> = std::collections::HashMap::new();
 
     input.iter().for_each(|l| {
-        let mut parts = l.split("-");
+        let mut parts = l.split('-');
         let lhs = parts.next().unwrap();
         let rhs = parts.next().unwrap();
 

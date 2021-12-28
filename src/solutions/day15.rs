@@ -9,10 +9,7 @@ impl Pos {
         let &Pos(x, y) = self;
         vec![Pos(x + 1, y), Pos(x - 1, y), Pos(x, y + 1), Pos(x, y - 1)]
             .into_iter()
-            .filter_map(|p| match get(grid, p.0, p.1) {
-                Some(weight) => Some((p, weight as usize)),
-                None => None,
-            })
+            .filter_map(|p| get(grid, p.0, p.1).map(|weight| (p, weight as usize)))
             .collect()
     }
 }

@@ -59,7 +59,7 @@ fn line_to_coordinates(l: &str) -> ((i32, i32), (i32, i32)) {
 }
 
 fn str_to_tuple(s: &str) -> (i32, i32) {
-    let mut numbers = s.split(",");
+    let mut numbers = s.split(',');
     let x = numbers.next().unwrap().parse::<i32>().unwrap();
     let y = numbers.next().unwrap().parse::<i32>().unwrap();
 

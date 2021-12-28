@@ -138,7 +138,7 @@ fn indexes_for_group_in_permutation(idxs: &mut Vec<usize>, perm: &Vec<&&str>, gr
     }
 
     // Sort our list so it matches the expected output.
-    idxs.sort();
+    idxs.sort_unstable();
 }
 
 #[cfg(test)]

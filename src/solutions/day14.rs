@@ -87,7 +87,7 @@ fn count_after_insertion(input: String, iterations: usize) -> i64 {
     }
 
     let mut count_vec = count.iter().map(|(_, v)| *v).collect::<Vec<_>>();
-    count_vec.sort();
+    count_vec.sort_unstable();
 
     count_vec[count_vec.len() - 1] - count_vec[0]
 }

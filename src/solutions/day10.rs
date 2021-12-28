@@ -54,7 +54,7 @@ fn part_two(input: Vec<String>) -> i64 {
                     '<' | '[' | '{' | '(' => filter_brackets.push(*c),
                     '>' | ']' | '}' | ')' => {
                         let last_bracket = filter_brackets.pop().unwrap();
-                        let must_match = bracket_map.get(&c).unwrap();
+                        let must_match = bracket_map.get(c).unwrap();
 
                         if last_bracket != *must_match {
                             return false;
@@ -82,15 +82,15 @@ fn part_two(input: Vec<String>) -> i64 {
                 missing_brackets
                     .iter()
                     .rev()
-                    .fold(0, |acc, c| acc * 5 + point_map.get(&c).unwrap()),
+                    .fold(0, |acc, c| acc * 5 + point_map.get(c).unwrap()),
             );
 
             missing_brackets = vec![];
         });
 
-    scores.sort();
+    scores.sort_unstable();
 
-    scores[scores.len() / 2 as usize]
+    scores[scores.len() / 2_usize]
 }
 
 fn bracket_map() -> std::collections::HashMap<char, char> {

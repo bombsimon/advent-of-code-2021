@@ -118,7 +118,7 @@ fn most_common_bits_2(vec: &[Vec<u16>]) -> Vec<u16> {
 }
 
 fn filter_rows(vec: &[Vec<u16>], col: usize, flip: bool) -> Vec<Vec<u16>> {
-    let mut filter = most_common_bits_2(&vec);
+    let mut filter = most_common_bits_2(vec);
     if flip {
         filter = filter
             .iter()

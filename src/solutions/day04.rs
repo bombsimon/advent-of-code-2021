@@ -12,13 +12,13 @@ fn part_one(input: String) -> i32 {
     let series = groups
         .next()
         .unwrap()
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i32>().unwrap())
         .collect::<Vec<_>>();
 
     let mut boards = groups
         .map(|b| {
-            b.split("\n")
+            b.split('\n')
                 .filter(|l| !l.is_empty())
                 .map(|r| {
                     r.split_whitespace()
@@ -33,7 +33,7 @@ fn part_one(input: String) -> i32 {
         update_boards(&mut boards, n);
 
         for board in &boards {
-            if has_bingo(&board) {
+            if has_bingo(board) {
                 let sum = board
                     .iter()
                     .flat_map(|f| f.iter())
@@ -53,13 +53,13 @@ fn part_two(input: String) -> i32 {
     let series = groups
         .next()
         .unwrap()
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i32>().unwrap())
         .collect::<Vec<_>>();
 
     let mut boards = groups
         .map(|b| {
-            b.split("\n")
+            b.split('\n')
                 .filter(|l| !l.is_empty())
                 .map(|r| {
                     r.split_whitespace()
@@ -76,14 +76,14 @@ fn part_two(input: String) -> i32 {
         update_boards(&mut boards, n);
 
         // If only one day left, store the last board so we can get the sum from it and iterate until it gets bingo!
-        if boards.len() == 1 && last_board.len() == 0 {
+        if boards.len() == 1 && last_board.is_empty() {
             last_board = boards[0].clone();
         }
 
         boards.retain(|b| !has_bingo(b));
 
         // The last board got bingo, calculate the sum and return the result.
-        if boards.len() == 0 {
+        if boards.is_empty() {
             let sum = last_board
                 .iter()
                 .flat_map(|f| f.iter())
@@ -144,7 +144,7 @@ fn has_bingo(board: &[Vec<(i32, bool)>]) -> bool {
         for row in board {
             // Only check the row the first iteration to avoid duplication.
             if i == 0 {
-                let row_bingo = !row.iter().any(|(_, drawn)| *drawn == false);
+                let row_bingo = !row.iter().any(|(_, drawn)| !(*drawn));
                 if row_bingo {
                     return true;
                 }

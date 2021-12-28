@@ -9,7 +9,7 @@ pub fn solve() {
 
 fn part_one(input: String) -> i64 {
     let mut fish = input
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i32>().unwrap())
         .collect::<Vec<_>>();
 
@@ -35,7 +35,7 @@ fn part_two(input: String) -> i64 {
     let mut fish_by_age: std::collections::HashMap<i8, i64> = std::collections::HashMap::new();
 
     input
-        .split(",")
+        .split(',')
         .map(|x| x.parse::<i8>().unwrap())
         .for_each(|x| {
             let count = fish_by_age.entry(x).or_default();
