@@ -2,6 +2,43 @@ use itertools::join;
 
 use crate::input;
 
+#[derive(Debug)]
+struct Packet {
+    version: u8,
+    packet_type: u8,
+    literal: i64,
+    sub_packets: Vec<Packet>,
+}
+
+impl Packet {
+    fn version_sum(&self) -> i64 {
+        self.sub_packets
+            .iter()
+            .fold(self.version as i64, |acc, pkt| acc + pkt.version_sum())
+    }
+
+    fn evaluate(&self) -> i64 {
+        match self.packet_type {
+            4 => self.literal,
+            0 => self.sub_packets.iter().map(Packet::evaluate).sum(),
+            1 => self.sub_packets.iter().map(Packet::evaluate).product(),
+            2 => self.sub_packets.iter().map(Packet::evaluate).min().unwrap(),
+            3 => self.sub_packets.iter().map(Packet::evaluate).max().unwrap(),
+            x => {
+                let fst = self.sub_packets[0].evaluate();
+                let snd = self.sub_packets[1].evaluate();
+
+                match x {
+                    5 => (fst > snd).into(),
+                    6 => (fst < snd).into(),
+                    7 => (fst == snd).into(),
+                    _ => unreachable!(),
+                }
+            }
+        }
+    }
+}
+
 pub fn solve() {
     let x = input::raw_file_for_day(16);
 
@@ -10,51 +47,72 @@ pub fn solve() {
 }
 
 fn part_one(input: String) -> i64 {
-    let x = decode_hex(&input)
-        .iter()
-        .map(|b| vec![b >> 3 & 1, b >> 2 & 1, b >> 1 & 1, b >> 0 & 1])
-        .flatten()
-        .collect::<Vec<_>>();
+    let bin = hex_string_as_binary(input);
+    let (packet, _) = read_packets(&bin);
 
-    let mut i = 0;
-    let mut version_sum: i64 = 0;
+    packet.version_sum() as i64
+}
 
-    loop {
-        // Nothing more to read, break to now overflow.
-        // Version (3) + Type (3) + At least 1 byte (4)
-        let min_bites_required = 3 + 3 + 4;
-        if i + min_bites_required >= x.len() {
-            break;
+fn part_two(input: String) -> i64 {
+    let bin = hex_string_as_binary(input);
+    let (packet, _) = read_packets(&bin);
+
+    packet.evaluate() as i64
+}
+
+fn read_packets(bytes: &[u8]) -> (Packet, usize) {
+    let (version, packet_type) = version_and_type(&bytes[0..=5]);
+    let mut packet = Packet {
+        version,
+        packet_type,
+        literal: 0,
+        sub_packets: vec![],
+    };
+
+    let mut i = 6usize;
+    match packet_type {
+        4u8 => {
+            let (bits_read, literals) = read_literal_values(&bytes[i..]);
+            let (_b, v) = literal_values_to_binary(&literals);
+
+            packet.literal = v;
+
+            i += bits_read;
         }
+        _ => {
+            let (next_packet_begins, packet_len_or_count, is_package_count) =
+                read_operator_values(&bytes[i..]);
 
-        let (version, packet_type) = version_and_type(&x[i..=i + 5]);
+            i += next_packet_begins;
 
-        version_sum += version as i64;
+            if is_package_count {
+                for _ in 0..packet_len_or_count {
+                    let (sub_packet, consumed) = read_packets(&bytes[i..]);
+                    packet.sub_packets.push(sub_packet);
 
-        // We start reading the actual packet at the 6th byte.
-        i += 6;
+                    i += consumed;
+                }
+            } else {
+                let stop_at = i + packet_len_or_count as usize;
+                while i < stop_at {
+                    let (sub_packet, consumed) = read_packets(&bytes[i..]);
+                    packet.sub_packets.push(sub_packet);
 
-        match packet_type {
-            4u8 => {
-                let (next_packet_begins, literals) = read_literal_values(&x[i..]);
-                let (_b, _v) = literal_values_to_binary(&literals);
-
-                i += next_packet_begins;
-            }
-            _ => {
-                let (next_packet_begins, _sub_packets_total_len, _is_package_count) =
-                    read_operator_values(&x[i..]);
-
-                i += next_packet_begins;
+                    i += consumed;
+                }
             }
         }
     }
 
-    version_sum
+    (packet, i)
 }
 
-fn part_two(_input: String) -> i64 {
-    1
+fn hex_string_as_binary(input: String) -> Vec<u8> {
+    decode_hex(&input)
+        .iter()
+        .map(|b| vec![b >> 3 & 1, b >> 2 & 1, b >> 1 & 1, b & 1])
+        .flatten()
+        .collect()
 }
 
 fn version_and_type(bytes: &[u8]) -> (u8, u8) {
@@ -68,23 +126,23 @@ fn version_and_type(bytes: &[u8]) -> (u8, u8) {
 }
 
 fn read_operator_values(bytes: &[u8]) -> (usize, u32, bool) {
-    let is_11_bit_len = &bytes[0] == &1u8;
+    let is_11_bit_len = bytes[0] == 1u8;
     let sub_packets_stop = if is_11_bit_len { 11 } else { 15 };
 
     let sub_packets_len_bytes = join(&bytes[1..=sub_packets_stop], "");
     let sub_packets_len = u32::from_str_radix(&sub_packets_len_bytes, 2).unwrap();
 
-    // +1 for the next byte and +1 for the first length bit
+    // +1 for the next bit
     (sub_packets_stop + 1, sub_packets_len, is_11_bit_len)
 }
 
 fn read_literal_values(bytes: &[u8]) -> (usize, Vec<u8>) {
     let mut values: Vec<u8> = vec![];
     let mut is_last_group: bool = false;
-
     let mut i = 0usize;
+
     while !is_last_group {
-        is_last_group = &bytes[i] != &1u8;
+        is_last_group = bytes[i] != 1u8;
 
         let packet_bytes = join(&bytes[i + 1..=i + 4], "");
         let packet = u8::from_str_radix(&packet_bytes, 2).unwrap();
@@ -96,18 +154,13 @@ fn read_literal_values(bytes: &[u8]) -> (usize, Vec<u8>) {
     (i, values)
 }
 
-fn literal_values_to_binary(literals: &[u8]) -> (String, u64) {
-    let binary_strings = literals
-        .iter()
-        .map(|d| format!("{:04b}", d))
-        .collect::<Vec<_>>();
+fn literal_values_to_binary(literals: &[u8]) -> (String, i64) {
+    let binary_strings: Vec<String> = literals.iter().map(|d| format!("{:04b}", d)).collect();
 
     let binary_string = join(binary_strings, "");
+    let decimal = i64::from_str_radix(&binary_string, 2).unwrap();
 
-    (
-        binary_string.clone(),
-        u64::from_str_radix(&binary_string, 2).unwrap(),
-    )
+    (binary_string, decimal)
 }
 
 fn decode_hex(s: &str) -> Vec<u8> {
@@ -120,7 +173,7 @@ fn decode_hex(s: &str) -> Vec<u8> {
 mod tests {
     #[test]
     fn part_one() {
-        for (input, expected) in vec![
+        for (input, expected) in &[
             ("D2FE28", 6),
             ("38006F45291200", 9),
             ("EE00D40C823060", 14),
@@ -129,14 +182,23 @@ mod tests {
             ("C0015000016115A2E0802F182340", 23),
             ("A0016C880162017C3686B18A3D4780", 31),
         ] {
-            assert_eq!(super::part_one(input.to_string()), expected);
+            assert_eq!(super::part_one(input.to_string()), *expected);
         }
     }
 
     #[test]
     fn part_two() {
-        for (input, expected) in vec![("9C0141080250320F1802104A08", 1)] {
-            assert_eq!(super::part_two(input.to_string()), expected);
+        for (input, expected) in &[
+            ("C200B40A82", 3),
+            ("04005AC33890", 54),
+            ("880086C3E88112", 7),
+            ("CE00C43D881120", 9),
+            ("D8005AC2A8F0", 1),
+            ("F600BC2D8F", 0),
+            ("9C005AC2F8F0", 0),
+            ("9C0141080250320F1802104A08", 1),
+        ] {
+            assert_eq!(super::part_two(input.to_string()), *expected);
         }
     }
 }
